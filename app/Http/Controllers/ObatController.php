@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Obat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ObatController extends Controller
 {
@@ -101,19 +102,27 @@ class ObatController extends Controller
         ]);
 
         $file = fopen($request->file('file')->getRealPath(), 'r');
-        fgets($file); // skip header
+        fgets($file);
 
         $imported = 0;
-        while (($row = fgetcsv($file)) !== false) {
-            if (empty($row[0])) continue;
+        DB::beginTransaction();
+        try {
+            while (($row = fgetcsv($file)) !== false) {
+                if (! isset($row[0]) || $row[0] === '') continue;
 
-            Obat::create([
-                'nama_obat' => $row[0],
-                'stok' => (int) ($row[1] ?? 0),
-                'stok_minimum' => (int) ($row[2] ?? 0),
-                'harga' => (float) ($row[3] ?? 0),
-            ]);
-            $imported++;
+                Obat::create([
+                    'nama_obat' => trim($row[0]),
+                    'stok' => (int) ($row[1] ?? 0),
+                    'stok_minimum' => (int) ($row[2] ?? 0),
+                    'harga' => (float) ($row[3] ?? 0),
+                ]);
+                $imported++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            fclose($file);
+            return back()->with('error', 'Gagal mengimpor: ' . $e->getMessage());
         }
 
         fclose($file);

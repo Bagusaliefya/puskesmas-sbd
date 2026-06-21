@@ -12,7 +12,7 @@ class PendaftaranController extends ApiController
 {
     public function index(): JsonResponse
     {
-        $pendaftaran = Pendaftaran::with('pasien')
+        $pendaftaran = Pendaftaran::with(['pasien', 'pemeriksaan'])
             ->whereDate('tanggal_daftar', today())
             ->latest()
             ->paginate(20);

@@ -17,7 +17,7 @@ class PemeriksaanController extends ApiController
             return $this->error('Data dokter tidak ditemukan.', 404);
         }
 
-        $pemeriksaan = Pemeriksaan::with(['pendaftaran.pasien', 'resep.detailResep.obat'])
+        $pemeriksaan = Pemeriksaan::with(['pendaftaran.pasien', 'dokter.pegawai', 'resep.detailResep.obat'])
             ->where('id_dokter', $dokter->id_dokter)
             ->latest()
             ->paginate(20);
@@ -46,6 +46,20 @@ class PemeriksaanController extends ApiController
             return $this->error('Data dokter tidak ditemukan.', 404);
         }
 
+        $pendaftaran = Pendaftaran::find($validated['id_pendaftaran']);
+
+        if (! $pendaftaran) {
+            return $this->error('Pendaftaran tidak ditemukan.', 404);
+        }
+
+        if (! $pendaftaran->dipanggil_at) {
+            return $this->error('Pasien belum dipanggil.', 422);
+        }
+
+        if ($pendaftaran->pemeriksaan) {
+            return $this->error('Pasien sudah diperiksa.', 422);
+        }
+
         $pemeriksaan = Pemeriksaan::create([
             'id_pendaftaran' => $validated['id_pendaftaran'],
             'id_dokter' => $dokter->id_dokter,
@@ -59,9 +73,10 @@ class PemeriksaanController extends ApiController
     public function daftarPeriksa(): JsonResponse
     {
         $daftar = Pendaftaran::whereDate('tanggal_daftar', today())
+            ->whereNotNull('dipanggil_at')
             ->doesntHave('pemeriksaan')
             ->with('pasien')
-            ->orderBy('created_at')
+            ->orderBy('dipanggil_at')
             ->get();
 
         return $this->success(\App\Http\Resources\PendaftaranResource::collection($daftar));

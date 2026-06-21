@@ -133,19 +133,25 @@
                 const nowServing = mainGrid.querySelector('.now-serving');
                 const waitingList = mainGrid.querySelector('.waiting-list');
 
+                function esc(str) {
+                    const d = document.createElement('div');
+                    d.textContent = str;
+                    return d.innerHTML;
+                }
+
                 const sd = data.data.sedang_dipanggil;
                 if (sd) {
                     nowServing.innerHTML = `
                         <div class="label"><span class="material-symbols-outlined" style="font-size:1.5rem;vertical-align:middle">campaign</span> Sedang Dipanggil</div>
-                        <div class="name">${sd.nama_pasien}</div>
+                        <div class="name">${esc(sd.nama_pasien)}</div>
                         <div class="status-badge">
                             <span class="material-symbols-outlined">check_circle</span>
-                            Dipanggil ${sd.dipanggil_at}
+                            Dipanggil ${esc(sd.dipanggil_at)}
                         </div>`;
                 } else if (data.data.antrean.length > 0) {
                     nowServing.innerHTML = `
                         <div class="label">Selanjutnya</div>
-                        <div class="name">${data.data.antrean[0].nama_pasien}</div>
+                        <div class="name">${esc(data.data.antrean[0].nama_pasien)}</div>
                         <div class="status-badge">
                             <span class="material-symbols-outlined">hourglass_top</span>
                             Menunggu Panggilan
@@ -171,8 +177,8 @@
                     antrean.forEach((a, i) => {
                         waitingHtml += `<div class="waiting-item">
                             <div class="number">${i + 1}</div>
-                            <div class="nama">${a.nama_pasien}</div>
-                            <div class="time">${a.created_at}</div>
+                            <div class="nama">${esc(a.nama_pasien)}</div>
+                            <div class="time">${esc(a.created_at)}</div>
                         </div>`;
                     });
                 }
@@ -184,7 +190,7 @@
                         <h3><span class="material-symbols-outlined">history</span> Selesai Diperiksa</h3>
                         <div class="done-items">`;
                     selesai.forEach(s => {
-                        waitingHtml += `<span class="done-item">${s.nama_pasien}</span>`;
+                        waitingHtml += `<span class="done-item">${esc(s.nama_pasien)}</span>`;
                     });
                     waitingHtml += `</div></div>`;
                 }

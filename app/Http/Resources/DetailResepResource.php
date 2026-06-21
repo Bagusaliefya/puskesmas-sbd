@@ -10,7 +10,7 @@ class DetailResepResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id_detail_resep' => $this->id_detail_resep,
+            'id_detail' => $this->id_detail,
             'obat' => $this->obat?->nama_obat,
             'jumlah' => $this->jumlah,
             'dosis' => $this->dosis,

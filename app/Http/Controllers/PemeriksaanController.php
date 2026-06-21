@@ -23,8 +23,10 @@ class PemeriksaanController extends Controller
         }
 
         $daftarPeriksa = Pendaftaran::whereDate('tanggal_daftar', today())
+            ->whereNotNull('dipanggil_at')
             ->doesntHave('pemeriksaan')
             ->with('pasien')
+            ->orderBy('dipanggil_at')
             ->get();
 
         return view('dashboard.dokter.pemeriksaan.index', compact('pemeriksaan', 'daftarPeriksa'));
@@ -38,6 +40,14 @@ class PemeriksaanController extends Controller
         }
 
         $pendaftaran = Pendaftaran::with('pasien')->findOrFail($id);
+
+        if (! $pendaftaran->dipanggil_at) {
+            return back()->with('error', 'Pasien belum dipanggil.');
+        }
+
+        if ($pendaftaran->pemeriksaan) {
+            return back()->with('error', 'Pasien sudah diperiksa.');
+        }
 
         return view('dashboard.dokter.pemeriksaan.create', compact('pendaftaran'));
     }
@@ -58,6 +68,20 @@ class PemeriksaanController extends Controller
 
         if (! $dokter) {
             return back()->withErrors(['error' => 'Data dokter tidak ditemukan.']);
+        }
+
+        $pendaftaran = Pendaftaran::find($validated['id_pendaftaran']);
+
+        if (! $pendaftaran) {
+            return back()->withErrors(['error' => 'Pendaftaran tidak ditemukan.']);
+        }
+
+        if (! $pendaftaran->dipanggil_at) {
+            return back()->withErrors(['error' => 'Pasien belum dipanggil.']);
+        }
+
+        if ($pendaftaran->pemeriksaan) {
+            return back()->withErrors(['error' => 'Pasien sudah diperiksa.']);
         }
 
         Pemeriksaan::create([
@@ -86,14 +110,24 @@ class PemeriksaanController extends Controller
 
     public function edit($id)
     {
+        $dokter = auth()->user()->pegawai?->dokter;
         $pemeriksaan = Pemeriksaan::with(['pendaftaran.pasien', 'dokter.pegawai'])->findOrFail($id);
+
+        if (! $dokter || $pemeriksaan->id_dokter !== $dokter->id_dokter) {
+            return back()->with('error', 'Anda tidak berwenang mengedit pemeriksaan ini.');
+        }
 
         return view('dashboard.dokter.pemeriksaan.edit', compact('pemeriksaan'));
     }
 
     public function update(Request $request, $id)
     {
+        $dokter = auth()->user()->pegawai?->dokter;
         $pemeriksaan = Pemeriksaan::findOrFail($id);
+
+        if (! $dokter || $pemeriksaan->id_dokter !== $dokter->id_dokter) {
+            return back()->withErrors(['error' => 'Anda tidak berwenang mengubah pemeriksaan ini.']);
+        }
 
         $validated = $request->validate([
             'diagnosa' => 'nullable|string',
@@ -109,7 +143,12 @@ class PemeriksaanController extends Controller
 
     public function destroy($id)
     {
+        $dokter = auth()->user()->pegawai?->dokter;
         $pemeriksaan = Pemeriksaan::with('resep.detailResep')->findOrFail($id);
+
+        if (! $dokter || $pemeriksaan->id_dokter !== $dokter->id_dokter) {
+            return back()->with('error', 'Anda tidak berwenang menghapus pemeriksaan ini.');
+        }
 
         if ($pemeriksaan->resep) {
             foreach ($pemeriksaan->resep->detailResep as $dr) {

@@ -6,7 +6,6 @@ if (! function_exists('statusPuskesmas')) {
     function statusPuskesmas(): array
     {
         $now = Carbon::now();
-        $hariIni = $now->format('Y-m-d');
         $waktu = $now->format('H:i');
 
         $buka = config('puskesmas.jam_buka');
@@ -22,6 +21,7 @@ if (! function_exists('statusPuskesmas')) {
                 'icon' => 'cancel',
                 'pesan' => "Puskesmas tutup. Buka pukul {$buka} WIB.",
                 'bisa_daftar' => false,
+                'bisa_periksa' => false,
             ];
         }
 

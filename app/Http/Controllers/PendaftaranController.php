@@ -17,6 +17,8 @@ class PendaftaranController extends Controller
             ->when($startDate, fn($q) => $q->whereDate('tanggal_daftar', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_daftar', '<=', $endDate))
             ->when(!$startDate && !$endDate, fn($q) => $q->whereDate('tanggal_daftar', today()))
+            ->orderByRaw("(select count(*) from pemeriksaan where pemeriksaan.id_pendaftaran = pendaftaran.id_pendaftaran) > 0")
+            ->orderByRaw("dipanggil_at is null desc")
             ->latest()
             ->paginate(10);
 

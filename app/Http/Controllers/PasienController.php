@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pasien;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PasienController extends Controller
 {
@@ -111,18 +112,26 @@ class PasienController extends Controller
         fgets($file);
 
         $imported = 0;
-        while (($row = fgetcsv($file)) !== false) {
-            if (empty($row[0])) continue;
+        DB::beginTransaction();
+        try {
+            while (($row = fgetcsv($file)) !== false) {
+                if (! isset($row[0]) || $row[0] === '') continue;
 
-            Pasien::create([
-                'nama_pasien' => $row[0],
-                'tanggal_lahir' => !empty($row[1]) ? $row[1] : null,
-                'jenis_kelamin' => in_array($row[2] ?? '', ['L', 'P']) ? $row[2] : null,
-                'alamat' => $row[3] ?? null,
-                'no_hp' => $row[4] ?? null,
-                'golongan_darah' => $row[5] ?? null,
-            ]);
-            $imported++;
+                Pasien::create([
+                    'nama_pasien' => trim($row[0]),
+                    'tanggal_lahir' => !empty($row[1]) ? $row[1] : null,
+                    'jenis_kelamin' => in_array($row[2] ?? '', ['L', 'P']) ? $row[2] : null,
+                    'alamat' => $row[3] ?? null,
+                    'no_hp' => $row[4] ?? null,
+                    'golongan_darah' => $row[5] ?? null,
+                ]);
+                $imported++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            fclose($file);
+            return back()->with('error', 'Gagal mengimpor: ' . $e->getMessage());
         }
 
         fclose($file);

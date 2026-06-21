@@ -37,13 +37,16 @@ class LaporanController extends Controller
             });
         }
 
+        if ($startDate && $endDate && $startDate > $endDate) {
+            return back()->with('error', 'Tanggal awal tidak boleh melebihi tanggal akhir.');
+        }
+
         $totalPendaftaran = $pendaftaranQuery->count();
         $totalPemeriksaan = $pemeriksaanQuery->count();
 
         $pendaftaranPerBulan = Pendaftaran::selectRaw('MONTH(tanggal_daftar) as bulan, COUNT(*) as total')
             ->when($startDate, fn($q) => $q->whereDate('tanggal_daftar', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_daftar', '<=', $endDate))
-            ->whereYear('tanggal_daftar', date('Y'))
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get();
@@ -53,7 +56,6 @@ class LaporanController extends Controller
         $pemeriksaanPerBulan = Pemeriksaan::selectRaw('MONTH(tanggal_periksa) as bulan, COUNT(*) as total')
             ->when($startDate, fn($q) => $q->whereDate('tanggal_periksa', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_periksa', '<=', $endDate))
-            ->whereYear('tanggal_periksa', date('Y'))
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get();
@@ -63,7 +65,6 @@ class LaporanController extends Controller
             ->join('pemeriksaan', 'resep.id_pemeriksaan', '=', 'pemeriksaan.id_pemeriksaan')
             ->when($startDate, fn($q) => $q->whereDate('pemeriksaan.tanggal_periksa', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('pemeriksaan.tanggal_periksa', '<=', $endDate))
-            ->whereYear('pemeriksaan.tanggal_periksa', date('Y'))
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get();
@@ -108,7 +109,6 @@ class LaporanController extends Controller
         $pendaftaranPerBulan = Pendaftaran::selectRaw('MONTH(tanggal_daftar) as bulan, COUNT(*) as total')
             ->when($startDate, fn($q) => $q->whereDate('tanggal_daftar', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_daftar', '<=', $endDate))
-            ->whereYear('tanggal_daftar', date('Y'))
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get();

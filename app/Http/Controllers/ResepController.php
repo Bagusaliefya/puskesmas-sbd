@@ -61,7 +61,12 @@ class ResepController extends Controller
 
     public function destroy($id)
     {
-        $resep = Resep::with('detailResep')->findOrFail($id);
+        $dokter = auth()->user()->pegawai?->dokter;
+        $resep = Resep::with('detailResep', 'pemeriksaan')->findOrFail($id);
+
+        if (! $dokter || $resep->pemeriksaan->id_dokter !== $dokter->id_dokter) {
+            return back()->with('error', 'Anda tidak berwenang menghapus resep ini.');
+        }
 
         foreach ($resep->detailResep as $dr) {
             Obat::where('id_obat', $dr->id_obat)->increment('stok', $dr->jumlah);

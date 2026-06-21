@@ -74,7 +74,11 @@
                 <td>{{ $i + 1 }}</td>
                 <td class="font-medium">{{ $d->pasien->nama_pasien ?? '-' }}</td>
                 <td>
-                    {{ Str::limit($d->keluhan, 30) ?? '-' }}
+                    @if($d->keluhan)
+                        {{ Str::of($d->keluhan)->replace("\n", ' / ')->limit(30) }}
+                    @else
+                        <span style="color:oklch(20% 0.024 262 / .4)">-</span>
+                    @endif
                     @if($d->keluhan && substr_count($d->keluhan, "\n") > 0)
                     <span class="badge badge-info badge-xs">Rangkap</span>
                     @endif

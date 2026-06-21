@@ -60,15 +60,15 @@ class QueueController extends Controller
             'success' => true,
             'data' => [
                 'sedang_dipanggil' => $sedangDipanggil ? [
-                    'nama_pasien' => $sedangDipanggil->pasien->nama_pasien,
-                    'dipanggil_at' => $sedangDipanggil->dipanggil_at->format('H:i'),
+                    'nama_pasien' => $sedangDipanggil->pasien?->nama_pasien ?? '-',
+                    'dipanggil_at' => $sedangDipanggil->dipanggil_at?->format('H:i') ?? '-',
                 ] : null,
                 'antrean' => $antrean->map(fn($a) => [
-                    'nama_pasien' => $a->pasien->nama_pasien,
-                    'created_at' => $a->created_at->format('H:i'),
+                    'nama_pasien' => $a->pasien?->nama_pasien ?? '-',
+                    'created_at' => $a->created_at?->format('H:i') ?? '-',
                 ]),
                 'selesai' => $selesai->map(fn($s) => [
-                    'nama_pasien' => $s->pasien->nama_pasien,
+                    'nama_pasien' => $s->pasien?->nama_pasien ?? '-',
                 ]),
             ],
         ]);

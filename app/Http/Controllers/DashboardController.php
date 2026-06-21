@@ -38,14 +38,14 @@ class DashboardController extends Controller
             'dokter' => [
                 'total_pemeriksaan_hari_ini' => Pemeriksaan::whereDate('tanggal_periksa', today())->count(),
                 'total_menunggu' => Pendaftaran::whereDate('tanggal_daftar', today())
+                    ->whereNotNull('dipanggil_at')
                     ->doesntHave('pemeriksaan')
                     ->count(),
                 'daftar_periksa' => Pendaftaran::whereDate('tanggal_daftar', today())
+                    ->whereNotNull('dipanggil_at')
                     ->doesntHave('pemeriksaan')
                     ->with('pasien')
-                    ->orderByRaw('CASE WHEN dipanggil_at IS NOT NULL THEN 0 ELSE 1 END')
                     ->orderBy('dipanggil_at')
-                    ->orderBy('created_at')
                     ->get(),
             ],
             default => [],

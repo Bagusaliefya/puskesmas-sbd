@@ -19,7 +19,7 @@ Route::get('/antrian/json', [QueueController::class, 'json'])->name('antrian.jso
 Route::get('/', [DaftarController::class, 'landing'])->name('landing');
 Route::get('/daftar', [DaftarController::class, 'form'])->name('daftar.form');
 Route::post('/daftar', [DaftarController::class, 'submit'])->name('daftar.submit');
-Route::get('/daftar/sukses/{id}', [DaftarController::class, 'sukses'])->name('daftar.sukses');
+Route::get('/daftar/sukses/{id}', [DaftarController::class, 'sukses'])->name('daftar.sukses')->middleware('auth');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
@@ -27,15 +27,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-
-Route::get('/generate-key', function () {
-    $key = 'base64:' . base64_encode(random_bytes(32));
-    $path = base_path('.env');
-    $content = file_get_contents($path);
-    $content = preg_replace('/APP_KEY=.*/', "APP_KEY=$key", $content);
-    file_put_contents($path, $content);
-    return "APP_KEY generated: $key";
-});
 
 Route::prefix('dashboard')->middleware(['auth', 'active'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

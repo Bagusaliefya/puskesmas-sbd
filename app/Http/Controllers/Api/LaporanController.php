@@ -33,13 +33,11 @@ class LaporanController extends ApiController
         $pendaftaranPerBulan = Pendaftaran::selectRaw('MONTH(tanggal_daftar) as bulan, COUNT(*) as total')
             ->when($startDate, fn($q) => $q->whereDate('tanggal_daftar', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_daftar', '<=', $endDate))
-            ->whereYear('tanggal_daftar', date('Y'))
             ->groupBy('bulan')->orderBy('bulan')->get();
 
         $pemeriksaanPerBulan = Pemeriksaan::selectRaw('MONTH(tanggal_periksa) as bulan, COUNT(*) as total')
             ->when($startDate, fn($q) => $q->whereDate('tanggal_periksa', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_periksa', '<=', $endDate))
-            ->whereYear('tanggal_periksa', date('Y'))
             ->groupBy('bulan')->orderBy('bulan')->get();
 
         $obatTerpakaiPerBulan = DetailResep::selectRaw('MONTH(pemeriksaan.tanggal_periksa) as bulan, SUM(detail_resep.jumlah) as total')
@@ -47,7 +45,6 @@ class LaporanController extends ApiController
             ->join('pemeriksaan', 'resep.id_pemeriksaan', '=', 'pemeriksaan.id_pemeriksaan')
             ->when($startDate, fn($q) => $q->whereDate('pemeriksaan.tanggal_periksa', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('pemeriksaan.tanggal_periksa', '<=', $endDate))
-            ->whereYear('pemeriksaan.tanggal_periksa', date('Y'))
             ->groupBy('bulan')->orderBy('bulan')->get();
 
         $bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];

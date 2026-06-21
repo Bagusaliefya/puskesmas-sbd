@@ -12,6 +12,7 @@ class PendaftaranResource extends JsonResource
         return [
             'id_pendaftaran' => $this->id_pendaftaran,
             'pasien' => new PasienResource($this->whenLoaded('pasien')),
+            'pemeriksaan' => $this->whenLoaded('pemeriksaan'),
             'tanggal_daftar' => $this->tanggal_daftar,
             'keluhan' => $this->keluhan,
             'tipe_pendaftaran' => $this->tipe_pendaftaran,

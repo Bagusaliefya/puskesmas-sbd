@@ -37,7 +37,7 @@
                     <tr>
                         <td class="font-medium">{{ $p->pasien->nama_pasien ?? '-' }}</td>
                         <td>
-                            {{ Str::limit($p->keluhan, 40) ?? '-' }}
+                            {{ Str::limit($p->keluhan ?? '', 40) ?: '-' }}
                             @if($p->keluhan && substr_count($p->keluhan, "\n") > 0)
                             <span class="badge badge-info badge-xs">Rangkap</span>
                             @endif

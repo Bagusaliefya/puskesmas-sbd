@@ -74,7 +74,7 @@
                 @foreach($pasien->pendaftaran as $d)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($d->tanggal_daftar)->format('d M Y') }}</td>
-                    <td>{{ Str::limit($d->keluhan, 30) ?? '-' }}</td>
+                    <td>{{ Str::limit($d->keluhan ?? '', 30) ?: '-' }}</td>
                     <td>@if($d->tipe_pendaftaran === 'mandiri') <span class="badge badge-accent badge-sm">Mandiri</span> @else {{ $d->petugas?->pegawai?->nama_pegawai ?? '-' }} @endif</td>
                     <td>@if($d->tipe_pendaftaran === 'mandiri') <span class="badge badge-accent badge-sm">Mandiri</span> @else <span class="badge badge-ghost badge-sm">Petugas</span> @endif</td>
                     <td>

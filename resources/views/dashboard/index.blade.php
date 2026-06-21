@@ -337,7 +337,7 @@
                         @endif
                     </td>
                     <td class="font-medium">{{ $p->pasien->nama_pasien ?? '-' }}</td>
-                    <td>{{ Str::limit($p->keluhan, 40) ?? '-' }}</td>
+                    <td>{{ Str::limit($p->keluhan ?? '', 40) ?: '-' }}</td>
                     <td>
                         @if($p->tipe_pendaftaran === 'mandiri')
                             <span class="badge badge-accent badge-sm">Mandiri</span>
