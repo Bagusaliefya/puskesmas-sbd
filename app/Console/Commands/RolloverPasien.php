@@ -30,7 +30,6 @@ class RolloverPasien extends Command
                 'tanggal_daftar' => today(),
                 'no_antrian' => $lastAntrian + 1 + $i,
                 'dipanggil_at' => null,
-                'id_dokter' => null,
             ]);
         }
 

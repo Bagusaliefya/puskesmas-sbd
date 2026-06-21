@@ -229,7 +229,7 @@
                 <span class="material-symbols-outlined">check_circle</span>
             </div>
             <h3 class="text-xl font-bold mb-2" style="color:oklch(12% 0.028 262)">Berhasil!</h3>
-            <p class="text-sm" style="color:oklch(20% 0.024 262 / .6)">{!! session('success') !!}</p>
+            <p class="text-sm" style="color:oklch(20% 0.024 262 / .6)">{{ session('success') }}</p>
             <div class="mt-6">
                 <button class="notif-btn notif-btn-success" onclick="document.getElementById('notif-success').close()">Tutup</button>
             </div>
@@ -261,7 +261,7 @@
                 <span class="material-symbols-outlined">error</span>
             </div>
             <h3 class="text-xl font-bold mb-2" style="color:oklch(12% 0.028 262)">Gagal!</h3>
-            <p class="text-sm" style="color:oklch(20% 0.024 262 / .6)">{!! session('error') !!}</p>
+            <p class="text-sm" style="color:oklch(20% 0.024 262 / .6)">{{ session('error') }}</p>
             <div class="mt-6">
                 <button class="notif-btn notif-btn-error" onclick="document.getElementById('notif-error').close()">Tutup</button>
             </div>

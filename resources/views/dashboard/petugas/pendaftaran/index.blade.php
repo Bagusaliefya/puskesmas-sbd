@@ -76,6 +76,7 @@
             </tr>
         </thead>
         <tbody>
+            @php $dokters = \App\Models\Dokter::with('pegawai')->tersedia()->get(); @endphp
             @forelse($pendaftaran as $i => $d)
             <tr>
                 <td><span class="font-mono font-semibold">#{{ str_pad($d->no_antrian ?? $i + 1, 3, '0', STR_PAD_LEFT) }}</span></td>
@@ -110,7 +111,6 @@
                         <button class="btn-primary-action text-sm py-1 px-3" onclick="document.getElementById('panggil-{{ $d->id_pendaftaran }}').showModal()">
                             <span class="material-symbols-outlined" style="font-size:16px">campaign</span> Panggil
                         </button>
-                        @php $dokters = \App\Models\Dokter::with('pegawai')->tersedia()->get(); @endphp
                         <dialog id="panggil-{{ $d->id_pendaftaran }}" class="modal">
                             <div class="modal-box text-center py-10 px-8">
                                 <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">

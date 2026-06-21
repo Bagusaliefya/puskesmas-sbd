@@ -69,12 +69,12 @@ class PegawaiController extends Controller
         User::create([
             'name' => $validated['nama_pegawai'],
             'email' => $email,
-            'password' => bcrypt($validated['password']),
+            'password' => $validated['password'],
             'role' => $validated['tipe'],
             'id_pegawai' => $pegawai->id_pegawai,
         ])->assignRole($validated['tipe']);
 
-        return redirect()->route('pegawai.index')->with('success', "Data pegawai berhasil ditambahkan. Akun login: <strong>{$email}</strong>");
+        return redirect()->route('pegawai.index')->with('success', "Data pegawai berhasil ditambahkan. Akun login: {$email}");
     }
 
     public function show(Pegawai $pegawai)
@@ -134,7 +134,7 @@ class PegawaiController extends Controller
                 'role' => $validated['tipe'],
             ];
             if ($request->filled('password')) {
-                $data['password'] = bcrypt($validated['password']);
+                $data['password'] = $validated['password'];
             }
             $user->update($data);
             $user->syncRoles([$validated['tipe']]);

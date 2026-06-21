@@ -22,14 +22,13 @@ class PendaftaranController extends Controller
                 ->orderBy('no_antrian')
                 ->get();
 
-            if ($pending->isNotEmpty()) {
+                if ($pending->isNotEmpty()) {
                 $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
                 foreach ($pending as $i => $p) {
                     $p->update([
                         'tanggal_daftar' => today(),
                         'no_antrian' => $lastAntrian + 1 + $i,
                         'dipanggil_at' => null,
-                        'id_dokter' => null,
                     ]);
                 }
                 $rolloverCount = $pending->count();
@@ -199,7 +198,7 @@ class PendaftaranController extends Controller
     public function panggil(Request $request, $id)
     {
         $status = statusPuskesmas();
-        if (! $status['bisa_daftar']) {
+        if (! $status['bisa_periksa']) {
             return back()->with('error', $status['pesan']);
         }
 

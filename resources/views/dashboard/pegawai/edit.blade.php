@@ -74,7 +74,7 @@
                         <label class="label">
                             <span class="label-text font-medium">Password Akun</span>
                         </label>
-                        <input type="text" name="password" class="input input-bordered w-full @error('password') input-error @enderror" value="{{ old('password') }}" placeholder="Kosongkan jika tidak diubah">
+                        <input type="password" name="password" class="input input-bordered w-full @error('password') input-error @enderror" placeholder="Kosongkan jika tidak diubah">
                         @error('password') <span class="text-error text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
                     <div>

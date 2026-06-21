@@ -22,13 +22,15 @@ class PemeriksaanController extends Controller
                 ->get();
         }
 
-        $daftarPeriksa = Pendaftaran::where('id_dokter', $dokter->id_dokter)
-            ->whereDate('tanggal_daftar', today())
-            ->whereNotNull('dipanggil_at')
-            ->doesntHave('pemeriksaan')
-            ->with('pasien')
-            ->orderBy('dipanggil_at')
-            ->get();
+        if ($dokter) {
+            $daftarPeriksa = Pendaftaran::where('id_dokter', $dokter->id_dokter)
+                ->whereDate('tanggal_daftar', today())
+                ->whereNotNull('dipanggil_at')
+                ->doesntHave('pemeriksaan')
+                ->with('pasien')
+                ->orderBy('dipanggil_at')
+                ->get();
+        }
 
         return view('dashboard.dokter.pemeriksaan.index', compact('pemeriksaan', 'daftarPeriksa'));
     }
