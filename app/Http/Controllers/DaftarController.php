@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DaftarController extends Controller
 {
@@ -46,15 +47,19 @@ class DaftarController extends Controller
             'golongan_darah' => $validated['golongan_darah'],
         ]);
 
-        $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
+        $pendaftaran = DB::transaction(function () use ($pasien, $validated) {
+            $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())
+                ->lockForUpdate()
+                ->max('no_antrian') ?? 0;
 
-        $pendaftaran = Pendaftaran::create([
-            'id_pasien' => $pasien->id_pasien,
-            'no_antrian' => $lastAntrian + 1,
-            'tipe_pendaftaran' => 'mandiri',
-            'tanggal_daftar' => today(),
-            'keluhan' => $validated['keluhan'],
-        ]);
+            return Pendaftaran::create([
+                'id_pasien' => $pasien->id_pasien,
+                'no_antrian' => $lastAntrian + 1,
+                'tipe_pendaftaran' => 'mandiri',
+                'tanggal_daftar' => today(),
+                'keluhan' => $validated['keluhan'],
+            ]);
+        });
 
         return redirect()->route('daftar.sukses', $pendaftaran->id_pendaftaran);
     }

@@ -7,6 +7,7 @@ use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PendaftaranController extends ApiController
 {
@@ -72,6 +73,9 @@ class PendaftaranController extends ApiController
         $pendaftaran = Pendaftaran::create([
             'id_pasien' => $idPasien,
             'id_petugas' => $petugas->id_petugas,
+            'no_antrian' => DB::transaction(function () {
+                return (Pendaftaran::whereDate('tanggal_daftar', today())->lockForUpdate()->max('no_antrian') ?? 0) + 1;
+            }),
             'tanggal_daftar' => today(),
             'keluhan' => $validated['keluhan'],
             'tipe_pendaftaran' => 'petugas',

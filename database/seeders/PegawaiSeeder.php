@@ -23,13 +23,14 @@ class PegawaiSeeder extends Seeder
             'id_pegawai' => $p1->id_pegawai,
             'loket' => 'Loket 1',
         ]);
-        $user1 = User::create([
+        $user1 = new User([
             'name' => 'Petugas',
             'email' => 'petugas@puskesmas.test',
-            'password' => bcrypt('password'),
-            'role' => 'petugas',
+            'password' => 'password',
             'id_pegawai' => $p1->id_pegawai,
         ]);
+        $user1->role = 'petugas';
+        $user1->save();
         $user1->assignRole('petugas');
 
         $d1 = Pegawai::create([
@@ -43,13 +44,14 @@ class PegawaiSeeder extends Seeder
             'id_pegawai' => $d1->id_pegawai,
             'spesialisasi' => 'Umum',
         ]);
-        $user2 = User::create([
+        $user2 = new User([
             'name' => 'Dokter',
             'email' => 'dokter@puskesmas.test',
-            'password' => bcrypt('password'),
-            'role' => 'dokter',
+            'password' => 'password',
             'id_pegawai' => $d1->id_pegawai,
         ]);
+        $user2->role = 'dokter';
+        $user2->save();
         $user2->assignRole('dokter');
     }
 }

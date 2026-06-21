@@ -66,13 +66,15 @@ class PegawaiController extends Controller
             $suffix++;
         }
 
-        User::create([
+        $user = new User([
             'name' => $validated['nama_pegawai'],
             'email' => $email,
             'password' => $validated['password'],
-            'role' => $validated['tipe'],
             'id_pegawai' => $pegawai->id_pegawai,
-        ])->assignRole($validated['tipe']);
+        ]);
+        $user->role = $validated['tipe'];
+        $user->save();
+        $user->assignRole($validated['tipe']);
 
         return redirect()->route('pegawai.index')->with('success', "Data pegawai berhasil ditambahkan. Akun login: {$email}");
     }
@@ -129,14 +131,12 @@ class PegawaiController extends Controller
 
         $user = User::where('id_pegawai', $pegawai->id_pegawai)->first();
         if ($user) {
-            $data = [
-                'name' => $validated['nama_pegawai'],
-                'role' => $validated['tipe'],
-            ];
+            $user->name = $validated['nama_pegawai'];
+            $user->role = $validated['tipe'];
             if ($request->filled('password')) {
-                $data['password'] = $validated['password'];
+                $user->password = $validated['password'];
             }
-            $user->update($data);
+            $user->save();
             $user->syncRoles([$validated['tipe']]);
         }
 

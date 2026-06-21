@@ -15,9 +15,9 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/antrian', [QueueController::class, 'display'])->name('antrian.display');
-Route::get('/antrian/json', [QueueController::class, 'json'])->name('antrian.json');
+Route::get('/antrian/json', [QueueController::class, 'json'])->name('antrian.json')->middleware('throttle:60,1');
 Route::get('/cek-resep', [DaftarController::class, 'cekResep'])->name('cek-resep');
-Route::post('/cek-resep', [DaftarController::class, 'cariResep'])->name('cek-resep.cari');
+Route::post('/cek-resep', [DaftarController::class, 'cariResep'])->name('cek-resep.cari')->middleware('throttle:10,1');
 Route::get('/', [DaftarController::class, 'landing'])->name('landing');
 Route::get('/daftar', [DaftarController::class, 'form'])->name('daftar.form');
 Route::post('/daftar', [DaftarController::class, 'submit'])->name('daftar.submit');

@@ -6,6 +6,7 @@ use App\Models\Dokter;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PendaftaranController extends Controller
 {
@@ -122,12 +123,14 @@ class PendaftaranController extends Controller
                 ->with('success', 'Keluhan ditambahkan ke pendaftaran yang sudah ada.');
         }
 
-        $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
-
         Pendaftaran::create([
             'id_pasien' => $idPasien,
             'id_petugas' => $petugas->id_petugas,
-            'no_antrian' => $lastAntrian + 1,
+            'no_antrian' => DB::transaction(function () {
+                return (Pendaftaran::whereDate('tanggal_daftar', today())
+                    ->lockForUpdate()
+                    ->max('no_antrian') ?? 0) + 1;
+            }),
             'tipe_pendaftaran' => 'petugas',
             'tanggal_daftar' => today(),
             'keluhan' => $validated['keluhan'],

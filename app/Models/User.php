@@ -19,9 +19,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
         'id_pegawai',
-        'is_active',
     ];
 
     public function pegawai()

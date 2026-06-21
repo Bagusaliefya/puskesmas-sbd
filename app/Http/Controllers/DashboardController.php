@@ -64,6 +64,10 @@ class DashboardController extends Controller
             return redirect()->route('dashboard');
         }
 
+        if (strlen($q) < 3) {
+            return back()->with('error', 'Kata kunci minimal 3 karakter.');
+        }
+
         $pasien = Pasien::where('nama_pasien', 'like', "%{$q}%")
             ->orWhere('no_hp', 'like', "%{$q}%")
             ->limit(20)
