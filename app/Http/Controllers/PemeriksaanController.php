@@ -22,7 +22,8 @@ class PemeriksaanController extends Controller
                 ->get();
         }
 
-        $daftarPeriksa = Pendaftaran::whereDate('tanggal_daftar', today())
+        $daftarPeriksa = Pendaftaran::where('id_dokter', $dokter->id_dokter)
+            ->whereDate('tanggal_daftar', today())
             ->whereNotNull('dipanggil_at')
             ->doesntHave('pemeriksaan')
             ->with('pasien')
@@ -90,6 +91,16 @@ class PemeriksaanController extends Controller
             'diagnosa' => $validated['diagnosa'],
             'tanggal_periksa' => today(),
         ]);
+
+        $masihAdaTugas = Pendaftaran::where('id_dokter', $dokter->id_dokter)
+            ->whereDate('tanggal_daftar', today())
+            ->whereNotNull('dipanggil_at')
+            ->doesntHave('pemeriksaan')
+            ->exists();
+
+        if (! $masihAdaTugas) {
+            $dokter->update(['status' => 'tersedia']);
+        }
 
         return redirect()->route('dokter.pemeriksaan.index')->with('success', 'Pemeriksaan berhasil dicatat.');
     }

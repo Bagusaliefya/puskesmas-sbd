@@ -46,8 +46,11 @@ class DaftarController extends Controller
             'golongan_darah' => $validated['golongan_darah'],
         ]);
 
+        $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
+
         $pendaftaran = Pendaftaran::create([
             'id_pasien' => $pasien->id_pasien,
+            'no_antrian' => $lastAntrian + 1,
             'tipe_pendaftaran' => 'mandiri',
             'tanggal_daftar' => today(),
             'keluhan' => $validated['keluhan'],
@@ -58,8 +61,41 @@ class DaftarController extends Controller
 
     public function sukses($id)
     {
-        $pendaftaran = Pendaftaran::with('pasien')->findOrFail($id);
+        $pendaftaran = Pendaftaran::with([
+            'pasien',
+            'pemeriksaan.dokter.pegawai',
+            'pemeriksaan.resep.detailResep.obat',
+        ])->findOrFail($id);
 
         return view('daftar-sukses', compact('pendaftaran'));
+    }
+
+    public function cekResep()
+    {
+        return view('cek-resep');
+    }
+
+    public function cariResep(Request $request)
+    {
+        $validated = $request->validate([
+            'no_antrian' => 'required|integer|min:1',
+        ]);
+
+        $pendaftaran = Pendaftaran::where('no_antrian', $validated['no_antrian'])
+            ->whereDate('tanggal_daftar', today())
+            ->with(['pemeriksaan.dokter.pegawai', 'pemeriksaan.resep.detailResep.obat'])
+            ->first();
+
+        if (! $pendaftaran) {
+            return back()->withInput()->with('error', 'Antrean tidak ditemukan untuk hari ini.');
+        }
+
+        $resep = $pendaftaran?->pemeriksaan?->resep;
+
+        if (! $resep) {
+            return back()->withInput()->with('error', 'Belum ada resep untuk pasien ini.');
+        }
+
+        return view('cek-resep', compact('resep', 'pendaftaran'));
     }
 }

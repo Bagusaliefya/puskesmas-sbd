@@ -13,6 +13,8 @@ class Pendaftaran extends Model
     protected $fillable = [
         'id_pasien',
         'id_petugas',
+        'id_dokter',
+        'no_antrian',
         'tipe_pendaftaran',
         'tanggal_daftar',
         'keluhan',
@@ -39,5 +41,10 @@ class Pendaftaran extends Model
     public function pemeriksaan()
     {
         return $this->hasOne(Pemeriksaan::class, 'id_pendaftaran', 'id_pendaftaran');
+    }
+
+    public function dokter()
+    {
+        return $this->belongsTo(Dokter::class, 'id_dokter', 'id_dokter');
     }
 }

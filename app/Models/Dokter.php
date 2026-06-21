@@ -13,6 +13,7 @@ class Dokter extends Model
     protected $fillable = [
         'id_pegawai',
         'spesialisasi',
+        'status',
     ];
 
     public function pegawai()
@@ -23,5 +24,15 @@ class Dokter extends Model
     public function pemeriksaan()
     {
         return $this->hasMany(Pemeriksaan::class, 'id_dokter', 'id_dokter');
+    }
+
+    public function pendaftaran()
+    {
+        return $this->hasMany(Pendaftaran::class, 'id_dokter', 'id_dokter');
+    }
+
+    public function scopeTersedia($query)
+    {
+        return $query->where('status', 'tersedia');
     }
 }

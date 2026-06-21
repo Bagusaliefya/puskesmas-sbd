@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dokter;
 use App\Models\Pasien;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
@@ -13,7 +14,29 @@ class PendaftaranController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $pendaftaran = Pendaftaran::with(['pasien', 'petugas.pegawai'])
+        $rolloverCount = 0;
+        if (!$startDate && !$endDate) {
+            $pending = Pendaftaran::whereDate('tanggal_daftar', '<', today())
+                ->doesntHave('pemeriksaan')
+                ->orderBy('tanggal_daftar')
+                ->orderBy('no_antrian')
+                ->get();
+
+            if ($pending->isNotEmpty()) {
+                $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
+                foreach ($pending as $i => $p) {
+                    $p->update([
+                        'tanggal_daftar' => today(),
+                        'no_antrian' => $lastAntrian + 1 + $i,
+                        'dipanggil_at' => null,
+                        'id_dokter' => null,
+                    ]);
+                }
+                $rolloverCount = $pending->count();
+            }
+        }
+
+        $pendaftaran = Pendaftaran::with(['pasien', 'petugas.pegawai', 'dokter.pegawai'])
             ->when($startDate, fn($q) => $q->whereDate('tanggal_daftar', '>=', $startDate))
             ->when($endDate, fn($q) => $q->whereDate('tanggal_daftar', '<=', $endDate))
             ->when(!$startDate && !$endDate, fn($q) => $q->whereDate('tanggal_daftar', today()))
@@ -22,7 +45,7 @@ class PendaftaranController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('dashboard.petugas.pendaftaran.index', compact('pendaftaran', 'startDate', 'endDate'));
+        return view('dashboard.petugas.pendaftaran.index', compact('pendaftaran', 'startDate', 'endDate', 'rolloverCount'));
     }
 
     public function create()
@@ -100,9 +123,12 @@ class PendaftaranController extends Controller
                 ->with('success', 'Keluhan ditambahkan ke pendaftaran yang sudah ada.');
         }
 
+        $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
+
         Pendaftaran::create([
             'id_pasien' => $idPasien,
             'id_petugas' => $petugas->id_petugas,
+            'no_antrian' => $lastAntrian + 1,
             'tipe_pendaftaran' => 'petugas',
             'tanggal_daftar' => today(),
             'keluhan' => $validated['keluhan'],
@@ -170,7 +196,7 @@ class PendaftaranController extends Controller
             ->with('success', 'Pendaftaran berhasil dihapus.');
     }
 
-    public function panggil($id)
+    public function panggil(Request $request, $id)
     {
         $status = statusPuskesmas();
         if (! $status['bisa_daftar']) {
@@ -183,8 +209,23 @@ class PendaftaranController extends Controller
             return back()->with('error', 'Pasien sudah diperiksa.');
         }
 
-        $pendaftaran->update(['dipanggil_at' => now()]);
+        $validated = $request->validate([
+            'id_dokter' => 'required|exists:dokter,id_dokter',
+        ]);
 
-        return back()->with('success', 'Pasien "' . ($pendaftaran->pasien->nama_pasien ?? '') . '" dipanggil.');
+        $dokter = Dokter::findOrFail($validated['id_dokter']);
+
+        if ($dokter->status !== 'tersedia') {
+            return back()->with('error', 'Dokter sedang sibuk.');
+        }
+
+        $dokter->update(['status' => 'sibuk']);
+
+        $pendaftaran->update([
+            'id_dokter' => $dokter->id_dokter,
+            'dipanggil_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pasien "' . ($pendaftaran->pasien->nama_pasien ?? '') . '" dipanggil untuk dr. ' . ($dokter->pegawai->nama_pegawai ?? '') . '.');
     }
 }

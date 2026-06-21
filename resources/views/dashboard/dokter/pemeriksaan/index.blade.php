@@ -31,10 +31,11 @@
         </h2>
         <div class="table-wrap">
             <table class="table w-full">
-                <thead><tr><th style="color:oklch(20% 0.024 262 / .6)">Pasien</th><th style="color:oklch(20% 0.024 262 / .6)">Keluhan</th><th style="color:oklch(20% 0.024 262 / .6)">Sumber</th><th style="color:oklch(20% 0.024 262 / .6)">Aksi</th></tr></thead>
+                <thead><tr><th style="color:oklch(20% 0.024 262 / .6)">No</th><th style="color:oklch(20% 0.024 262 / .6)">Pasien</th><th style="color:oklch(20% 0.024 262 / .6)">Keluhan</th><th style="color:oklch(20% 0.024 262 / .6)">Sumber</th><th style="color:oklch(20% 0.024 262 / .6)">Aksi</th></tr></thead>
                 <tbody>
                     @foreach($daftarPeriksa as $p)
                     <tr>
+                        <td><span class="font-mono font-semibold">#{{ str_pad($p->no_antrian ?? $loop->iteration, 3, '0', STR_PAD_LEFT) }}</span></td>
                         <td class="font-medium">{{ $p->pasien->nama_pasien ?? '-' }}</td>
                         <td>
                             {{ Str::limit($p->keluhan ?? '', 40) ?: '-' }}

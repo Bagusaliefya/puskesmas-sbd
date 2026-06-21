@@ -81,7 +81,7 @@
                 <div class="waiting-items">
                     @forelse($antrean as $i => $a)
                     <div class="waiting-item">
-                        <div class="number">{{ $i + 1 }}</div>
+                        <div class="number">{{ str_pad($a->no_antrian ?? $i + 1, 2, '0', STR_PAD_LEFT) }}</div>
                         <div class="nama">{{ $a->pasien->nama_pasien ?? '-' }}</div>
                         <div class="time">{{ \Carbon\Carbon::parse($a->created_at)->format('H:i') }}</div>
                     </div>

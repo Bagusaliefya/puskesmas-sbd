@@ -16,10 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/antrian', [QueueController::class, 'display'])->name('antrian.display');
 Route::get('/antrian/json', [QueueController::class, 'json'])->name('antrian.json');
+Route::get('/cek-resep', [DaftarController::class, 'cekResep'])->name('cek-resep');
+Route::post('/cek-resep', [DaftarController::class, 'cariResep'])->name('cek-resep.cari');
 Route::get('/', [DaftarController::class, 'landing'])->name('landing');
 Route::get('/daftar', [DaftarController::class, 'form'])->name('daftar.form');
 Route::post('/daftar', [DaftarController::class, 'submit'])->name('daftar.submit');
-Route::get('/daftar/sukses/{id}', [DaftarController::class, 'sukses'])->name('daftar.sukses')->middleware('auth');
+Route::get('/daftar/sukses/{id}', [DaftarController::class, 'sukses'])->name('daftar.sukses');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');

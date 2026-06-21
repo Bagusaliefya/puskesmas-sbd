@@ -54,6 +54,12 @@
     <a href="{{ route('petugas.pendaftaran.index') }}" class="badge badge-ghost badge-sm ml-2 cursor-pointer">Hapus filter</a>
 </div>
 @endif
+@if($rolloverCount > 0)
+<div class="mb-4 p-4 rounded-2xl text-sm flex items-center gap-2" style="background:oklch(52% 0.1 182 / .1);color:oklch(42% 0.086 187);border:1px solid oklch(52% 0.1 182 / .2)">
+    <span class="material-symbols-outlined" style="font-size:18px">autorenew</span>
+    <span><strong>{{ $rolloverCount }} pasien</strong> dari kemarin yang belum diperiksa telah dipindahkan ke hari ini dengan nomor antrian baru.</span>
+</div>
+@endif
 <div class="tonal-card overflow-hidden">
     <div class="p-1">
     <div class="table-wrap">
@@ -64,6 +70,7 @@
                 <th>Nama Pasien</th>
                 <th>Keluhan</th>
                 <th>Petugas</th>
+                <th>Dokter</th>
                 <th>Status</th>
                 <th>Aksi</th>
             </tr>
@@ -71,7 +78,7 @@
         <tbody>
             @forelse($pendaftaran as $i => $d)
             <tr>
-                <td>{{ $i + 1 }}</td>
+                <td><span class="font-mono font-semibold">#{{ str_pad($d->no_antrian ?? $i + 1, 3, '0', STR_PAD_LEFT) }}</span></td>
                 <td class="font-medium">{{ $d->pasien->nama_pasien ?? '-' }}</td>
                 <td>
                     @if($d->keluhan)
@@ -84,6 +91,7 @@
                     @endif
                 </td>
                 <td>@if($d->tipe_pendaftaran === 'mandiri') <span class="badge badge-accent badge-sm">Mandiri</span> @else {{ $d->petugas?->pegawai?->nama_pegawai ?? '-' }} @endif</td>
+                <td>{{ $d->dokter?->pegawai?->nama_pegawai ?? '-' }}</td>
                 <td>
                     @if($d->pemeriksaan)
                         <span class="badge badge-success badge-sm">Diperiksa</span>
@@ -102,20 +110,42 @@
                         <button class="btn-primary-action text-sm py-1 px-3" onclick="document.getElementById('panggil-{{ $d->id_pendaftaran }}').showModal()">
                             <span class="material-symbols-outlined" style="font-size:16px">campaign</span> Panggil
                         </button>
+                        @php $dokters = \App\Models\Dokter::with('pegawai')->tersedia()->get(); @endphp
                         <dialog id="panggil-{{ $d->id_pendaftaran }}" class="modal">
                             <div class="modal-box text-center py-10 px-8">
                                 <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                                     <span class="material-symbols-outlined text-4xl text-primary">campaign</span>
                                 </div>
-                                <h3 class="text-lg font-bold mb-1">Panggil Pasien?</h3>
-                                <p class="text-sm mb-6" style="color:oklch(20% 0.024 262 / .6)">Yakin ingin memanggil <strong>{{ $d->pasien->nama_pasien ?? 'pasien' }}</strong>?</p>
+                                <h3 class="text-lg font-bold mb-1">Panggil Pasien</h3>
+                                <p class="text-sm text-base-content/70 mb-2">Pilih dokter untuk <strong>{{ $d->pasien->nama_pasien ?? 'pasien' }}</strong></p>
+
+                                @if($dokters->count() === 0)
+                                <p class="text-sm mt-4 text-error">Tidak ada dokter tersedia saat ini.</p>
+                                <div class="mt-6">
+                                    <button type="button" class="btn-ghost-action" onclick="document.getElementById('panggil-{{ $d->id_pendaftaran }}').close()">Tutup</button>
+                                </div>
+                                @else
                                 <form method="POST" action="{{ route('petugas.pendaftaran.panggil', $d->id_pendaftaran) }}">
                                     @csrf
+                                    <div class="flex flex-col gap-2 my-6 text-left max-w-sm mx-auto">
+                                        @foreach($dokters as $dk)
+                                        <label class="block p-3 rounded-xl border cursor-pointer transition-all duration-200
+                                            border-base-300 bg-base-100
+                                            has-[:checked]:border-[#3B82F6] has-[:checked]:bg-slate-700/60 has-[:checked]:shadow-[0_0_12px_-3px_#3B82F6]">
+                                            <input type="radio" name="id_dokter" value="{{ $dk->id_dokter }}" class="hidden" required>
+                                            <div>
+                                                <p class="font-semibold text-sm text-base-content">{{ $dk->pegawai?->nama_pegawai ?? 'Dokter' }}</p>
+                                                <p class="text-xs text-base-content/50">{{ $dk->spesialisasi ?? '-' }}</p>
+                                            </div>
+                                        </label>
+                                        @endforeach
+                                    </div>
                                     <div class="flex justify-center gap-2">
                                         <button type="button" class="btn-ghost-action" onclick="document.getElementById('panggil-{{ $d->id_pendaftaran }}').close()">Batal</button>
-                                        <button class="btn-primary-action">Ya, Panggil</button>
+                                        <button type="submit" class="btn-primary-action">Panggil</button>
                                     </div>
                                 </form>
+                                @endif
                             </div>
                             <form method="dialog" class="modal-backdrop"><button></button></form>
                         </dialog>
@@ -128,7 +158,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="text-center py-8" style="color:oklch(20% 0.024 262 / .6)">Belum ada pendaftaran hari ini</td></tr>
+            <tr><td colspan="7" class="text-center py-8" style="color:oklch(20% 0.024 262 / .6)">Belum ada pendaftaran hari ini</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -43,6 +43,10 @@
                     <span class="font-heading text-xl lg:text-2xl font-extrabold text-[#00685f] tracking-tight">{{ config('app.name') }}</span>
                 </div>
                 <div class="flex items-center gap-3">
+                    <a href="{{ route('cek-resep') }}" class="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#0d1c2f]/60 hover:text-[#00685f] px-4 py-2 transition-colors">
+                        <span class="material-symbols-outlined text-base">medication</span>
+                        Cek Resep
+                    </a>
                     <a href="{{ route('login') }}" class="inline-flex items-center gap-2 font-body text-sm font-semibold text-[#0d1c2f]/60 hover:text-[#00685f] px-4 py-2 transition-colors">
                         <span class="material-symbols-outlined text-base">login</span>
                         Login

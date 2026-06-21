@@ -35,6 +35,13 @@ class ObatController extends Controller
             'harga' => 'required|numeric|min:0',
         ]);
 
+        if ((int) $validated['stok'] < (int) $validated['stok_minimum']) {
+            return back()->withInput()->withErrors([
+                'stok' => 'Stok obat tidak boleh kurang dari stok minimum.',
+                'stok_minimum' => 'Stok minimum tidak boleh lebih dari stok.',
+            ]);
+        }
+
         Obat::create($validated);
 
         return redirect()->route('obat.index')->with('success', 'Data obat berhasil ditambahkan.');
@@ -53,6 +60,13 @@ class ObatController extends Controller
             'stok_minimum' => 'required|integer|min:0',
             'harga' => 'required|numeric|min:0',
         ]);
+
+        if ((int) $validated['stok'] < (int) $validated['stok_minimum']) {
+            return back()->withInput()->withErrors([
+                'stok' => 'Stok obat tidak boleh kurang dari stok minimum.',
+                'stok_minimum' => 'Stok minimum tidak boleh lebih dari stok.',
+            ]);
+        }
 
         $obat->update($validated);
 
