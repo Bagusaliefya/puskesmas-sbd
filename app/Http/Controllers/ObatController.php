@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Obat;
+use Illuminate\Http\Request;
+
+class ObatController extends Controller
+{
+    public function index()
+    {
+        $obat = Obat::latest()->paginate(10);
+        $obatMenipis = Obat::hampirHabis()->count();
+
+        return view('dashboard.obat.index', compact('obat', 'obatMenipis'));
+    }
+
+    public function show(Obat $obat)
+    {
+        return view('dashboard.obat.show', compact('obat'));
+    }
+
+    public function create()
+    {
+        return view('dashboard.obat.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_obat' => 'required|string|max:255',
+            'stok' => 'required|integer|min:0',
+            'stok_minimum' => 'required|integer|min:0',
+            'harga' => 'required|numeric|min:0',
+        ]);
+
+        Obat::create($validated);
+
+        return redirect()->route('obat.index')->with('success', 'Data obat berhasil ditambahkan.');
+    }
+
+    public function edit(Obat $obat)
+    {
+        return view('dashboard.obat.edit', compact('obat'));
+    }
+
+    public function update(Request $request, Obat $obat)
+    {
+        $validated = $request->validate([
+            'nama_obat' => 'required|string|max:255',
+            'stok' => 'required|integer|min:0',
+            'stok_minimum' => 'required|integer|min:0',
+            'harga' => 'required|numeric|min:0',
+        ]);
+
+        $obat->update($validated);
+
+        return redirect()->route('obat.index')->with('success', 'Data obat berhasil diperbarui.');
+    }
+
+    public function destroy(Obat $obat)
+    {
+        $obat->delete();
+
+        return redirect()->route('obat.index')->with('success', 'Data obat berhasil dihapus.');
+    }
+
+    public function exportCsv()
+    {
+        $obat = Obat::orderBy('nama_obat')->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="data-obat-' . date('Y-m-d') . '.csv"',
+        ];
+
+        $callback = function () use ($obat) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, ['Nama Obat', 'Stok', 'Stok Minimum', 'Harga']);
+
+            foreach ($obat as $o) {
+                fputcsv($file, [
+                    $o->nama_obat,
+                    $o->stok,
+                    $o->stok_minimum,
+                    $o->harga,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function importCsv(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = fopen($request->file('file')->getRealPath(), 'r');
+        fgets($file); // skip header
+
+        $imported = 0;
+        while (($row = fgetcsv($file)) !== false) {
+            if (empty($row[0])) continue;
+
+            Obat::create([
+                'nama_obat' => $row[0],
+                'stok' => (int) ($row[1] ?? 0),
+                'stok_minimum' => (int) ($row[2] ?? 0),
+                'harga' => (float) ($row[3] ?? 0),
+            ]);
+            $imported++;
+        }
+
+        fclose($file);
+
+        return redirect()->route('obat.index')
+            ->with('success', "Berhasil mengimpor {$imported} data obat.");
+    }
+}
