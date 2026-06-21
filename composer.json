@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Puskesmas SBD — Sistem Informasi Puskesmas untuk manajemen pasien, pendaftaran, pemeriksaan, resep obat, dan stok obat.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
