@@ -6,6 +6,7 @@ use App\Http\Resources\PasienResource;
 use App\Models\Pasien;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PasienController extends ApiController
 {
@@ -47,6 +48,10 @@ class PasienController extends ApiController
             'no_hp' => 'nullable|string|max:20',
             'golongan_darah' => 'nullable|string|max:5',
         ]);
+
+        if ($request->input('updated_at') && $pasien->updated_at->toDateTimeString() !== $request->input('updated_at')) {
+            return $this->error('Data pasien telah diubah oleh pengguna lain. Silakan muat ulang dan coba lagi.', 409);
+        }
 
         $pasien->update($validated);
 

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\PemeriksaanResource;
+use App\Models\Dokter;
 use App\Models\Pemeriksaan;
 use App\Models\Pendaftaran;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PemeriksaanController extends ApiController
 {
@@ -46,28 +48,45 @@ class PemeriksaanController extends ApiController
             return $this->error('Data dokter tidak ditemukan.', 404);
         }
 
-        $pendaftaran = Pendaftaran::find($validated['id_pendaftaran']);
+        try {
+            $pemeriksaan = DB::transaction(function () use ($validated, $dokter) {
+                $pendaftaran = Pendaftaran::where('id_pendaftaran', $validated['id_pendaftaran'])->lockForUpdate()->firstOrFail();
 
-        if (! $pendaftaran) {
-            return $this->error('Pendaftaran tidak ditemukan.', 404);
+                if (! $pendaftaran->dipanggil_at) {
+                    throw new \Exception('Pasien belum dipanggil.');
+                }
+
+                if ($pendaftaran->pemeriksaan) {
+                    throw new \Exception('Pasien sudah diperiksa.');
+                }
+
+                $pemeriksaan = Pemeriksaan::create([
+                    'id_pendaftaran' => $validated['id_pendaftaran'],
+                    'id_dokter' => $dokter->id_dokter,
+                    'diagnosa' => $validated['diagnosa'],
+                    'tanggal_periksa' => today(),
+                ]);
+
+                $masihAdaTugas = Pendaftaran::where('id_dokter', $dokter->id_dokter)
+                    ->whereDate('tanggal_daftar', today())
+                    ->whereNotNull('dipanggil_at')
+                    ->doesntHave('pemeriksaan')
+                    ->lockForUpdate()
+                    ->exists();
+
+                if (! $masihAdaTugas) {
+                    Dokter::where('id_dokter', $dokter->id_dokter)
+                        ->lockForUpdate()
+                        ->update(['status' => 'tersedia']);
+                }
+
+                return $pemeriksaan;
+            });
+
+            return $this->success(new PemeriksaanResource($pemeriksaan), 'Pemeriksaan berhasil.', 201);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), 422);
         }
-
-        if (! $pendaftaran->dipanggil_at) {
-            return $this->error('Pasien belum dipanggil.', 422);
-        }
-
-        if ($pendaftaran->pemeriksaan) {
-            return $this->error('Pasien sudah diperiksa.', 422);
-        }
-
-        $pemeriksaan = Pemeriksaan::create([
-            'id_pendaftaran' => $validated['id_pendaftaran'],
-            'id_dokter' => $dokter->id_dokter,
-            'diagnosa' => $validated['diagnosa'],
-            'tanggal_periksa' => today(),
-        ]);
-
-        return $this->success(new PemeriksaanResource($pemeriksaan), 'Pemeriksaan berhasil.', 201);
     }
 
     public function daftarPeriksa(): JsonResponse

@@ -59,6 +59,12 @@ class PasienController extends Controller
             'golongan_darah' => 'nullable|string|max:5',
         ]);
 
+        if ($request->input('updated_at') && $pasien->updated_at->toDateTimeString() !== $request->input('updated_at')) {
+            return back()->withInput()->withErrors([
+                'stale_data' => 'Data pasien telah diubah oleh pengguna lain. Silakan muat ulang halaman dan coba lagi.',
+            ]);
+        }
+
         $pasien->update($validated);
 
         return redirect()->route('pasien.index')->with('success', 'Data pasien berhasil diperbarui.');

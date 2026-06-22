@@ -7,6 +7,7 @@ use App\Models\Obat;
 use App\Models\Pemeriksaan;
 use App\Models\Resep;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ResepController extends Controller
 {
@@ -28,56 +29,77 @@ class ResepController extends Controller
             'obat.*.dosis' => 'nullable|string|max:255',
         ]);
 
-        if (Resep::where('id_pemeriksaan', $validated['id_pemeriksaan'])->exists()) {
-            return back()->withErrors(['error' => 'Resep untuk pemeriksaan ini sudah ada.']);
-        }
-
-        foreach ($validated['obat'] as $item) {
-            $obat = Obat::where('id_obat', $item['id_obat'])->first();
-
-            if (! $obat || $obat->stok < $item['jumlah']) {
-                return back()->withErrors(['error' => "Stok {$obat?->nama_obat} tidak mencukupi. Tersedia: {$obat?->stok}."]);
+        DB::beginTransaction();
+        try {
+            if (Resep::where('id_pemeriksaan', $validated['id_pemeriksaan'])->lockForUpdate()->exists()) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Resep untuk pemeriksaan ini sudah ada.']);
             }
-        }
 
-        $resep = Resep::create([
-            'id_pemeriksaan' => $validated['id_pemeriksaan'],
-        ]);
+            foreach ($validated['obat'] as $item) {
+                $obat = Obat::where('id_obat', $item['id_obat'])->lockForUpdate()->first();
 
-        foreach ($validated['obat'] as $item) {
-            DetailResep::create([
-                'id_resep' => $resep->id_resep,
-                'id_obat' => $item['id_obat'],
-                'jumlah' => $item['jumlah'],
-                'dosis' => $item['dosis'],
+                if (! $obat || $obat->stok < $item['jumlah']) {
+                    DB::rollBack();
+                    return back()->withErrors(['error' => "Stok {$obat?->nama_obat} tidak mencukupi. Tersedia: {$obat?->stok}."]);
+                }
+            }
+
+            $resep = Resep::create([
+                'id_pemeriksaan' => $validated['id_pemeriksaan'],
             ]);
 
-            Obat::where('id_obat', $item['id_obat'])->decrement('stok', $item['jumlah']);
-        }
+            foreach ($validated['obat'] as $item) {
+                DetailResep::create([
+                    'id_resep' => $resep->id_resep,
+                    'id_obat' => $item['id_obat'],
+                    'jumlah' => $item['jumlah'],
+                    'dosis' => $item['dosis'],
+                ]);
 
-        return redirect()->route('dokter.pemeriksaan.show', $validated['id_pemeriksaan'])
-            ->with('success', 'Resep berhasil dibuat.');
+                Obat::where('id_obat', $item['id_obat'])->decrement('stok', $item['jumlah']);
+            }
+
+            DB::commit();
+            return redirect()->route('dokter.pemeriksaan.show', $validated['id_pemeriksaan'])
+                ->with('success', 'Resep berhasil dibuat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal membuat resep: ' . $e->getMessage()]);
+        }
     }
 
     public function destroy($id)
     {
         $dokter = auth()->user()->pegawai?->dokter;
-        $resep = Resep::with('detailResep', 'pemeriksaan')->findOrFail($id);
 
-        if (! $dokter || $resep->pemeriksaan->id_dokter !== $dokter->id_dokter) {
-            return back()->with('error', 'Anda tidak berwenang menghapus resep ini.');
+        DB::beginTransaction();
+        try {
+            $resep = Resep::where('id_resep', $id)
+                ->lockForUpdate()
+                ->with('detailResep', 'pemeriksaan')
+                ->firstOrFail();
+
+            if (! $dokter || $resep->pemeriksaan->id_dokter !== $dokter->id_dokter) {
+                DB::rollBack();
+                return back()->with('error', 'Anda tidak berwenang menghapus resep ini.');
+            }
+
+            foreach ($resep->detailResep as $dr) {
+                Obat::where('id_obat', $dr->id_obat)->increment('stok', $dr->jumlah);
+            }
+
+            $idPemeriksaan = $resep->id_pemeriksaan;
+            $resep->detailResep()->delete();
+            $resep->delete();
+
+            DB::commit();
+            return redirect()->route('dokter.pemeriksaan.show', $idPemeriksaan)
+                ->with('success', 'Resep berhasil dihapus dan stok obat dikembalikan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus resep: ' . $e->getMessage());
         }
-
-        foreach ($resep->detailResep as $dr) {
-            Obat::where('id_obat', $dr->id_obat)->increment('stok', $dr->jumlah);
-        }
-
-        $idPemeriksaan = $resep->id_pemeriksaan;
-        $resep->detailResep()->delete();
-        $resep->delete();
-
-        return redirect()->route('dokter.pemeriksaan.show', $idPemeriksaan)
-            ->with('success', 'Resep berhasil dihapus dan stok obat dikembalikan.');
     }
 
     public function show($id)

@@ -20,6 +20,8 @@
             <form method="POST" action="{{ route('petugas.pendaftaran.update', $pendaftaran->id_pendaftaran) }}">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="updated_at" value="{{ $pendaftaran->updated_at }}">
+                @error('stale_data') <div class="alert alert-error mb-4 p-3 rounded-lg text-sm">{{ $message }}</div> @enderror
 
                 <div class="form-control">
                     <label class="label">

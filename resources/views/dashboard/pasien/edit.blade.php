@@ -18,6 +18,8 @@
         <div class="p-6">
             <form method="POST" action="{{ route('pasien.update', $pasien) }}">
                 @csrf @method('PUT')
+                <input type="hidden" name="updated_at" value="{{ $pasien->updated_at }}">
+                @error('stale_data') <div class="alert alert-error mb-4 p-3 rounded-lg text-sm">{{ $message }}</div> @enderror
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="form-control md:col-span-2">
                         <label class="label">

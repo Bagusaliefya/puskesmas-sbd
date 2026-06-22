@@ -70,16 +70,16 @@ class PendaftaranController extends ApiController
             $idPasien = $pasien->id_pasien;
         }
 
-        $pendaftaran = Pendaftaran::create([
-            'id_pasien' => $idPasien,
-            'id_petugas' => $petugas->id_petugas,
-            'no_antrian' => DB::transaction(function () {
-                return (Pendaftaran::whereDate('tanggal_daftar', today())->lockForUpdate()->max('no_antrian') ?? 0) + 1;
-            }),
-            'tanggal_daftar' => today(),
-            'keluhan' => $validated['keluhan'],
-            'tipe_pendaftaran' => 'petugas',
-        ]);
+        $pendaftaran = DB::transaction(function () use ($idPasien, $petugas, $validated) {
+            return Pendaftaran::create([
+                'id_pasien' => $idPasien,
+                'id_petugas' => $petugas->id_petugas,
+                'no_antrian' => (Pendaftaran::whereDate('tanggal_daftar', today())->lockForUpdate()->max('no_antrian') ?? 0) + 1,
+                'tanggal_daftar' => today(),
+                'keluhan' => $validated['keluhan'],
+                'tipe_pendaftaran' => 'petugas',
+            ]);
+        });
 
         return $this->success(new PendaftaranResource($pendaftaran), 'Pendaftaran berhasil.', 201);
     }

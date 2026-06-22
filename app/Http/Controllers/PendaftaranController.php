@@ -17,23 +17,28 @@ class PendaftaranController extends Controller
 
         $rolloverCount = 0;
         if (!$startDate && !$endDate) {
-            $pending = Pendaftaran::whereDate('tanggal_daftar', '<', today())
-                ->doesntHave('pemeriksaan')
-                ->orderBy('tanggal_daftar')
-                ->orderBy('no_antrian')
-                ->get();
+            DB::transaction(function () use (&$rolloverCount) {
+                $pending = Pendaftaran::whereDate('tanggal_daftar', '<', today())
+                    ->doesntHave('pemeriksaan')
+                    ->orderBy('tanggal_daftar')
+                    ->orderBy('no_antrian')
+                    ->lockForUpdate()
+                    ->get();
 
                 if ($pending->isNotEmpty()) {
-                $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())->max('no_antrian') ?? 0;
-                foreach ($pending as $i => $p) {
-                    $p->update([
-                        'tanggal_daftar' => today(),
-                        'no_antrian' => $lastAntrian + 1 + $i,
-                        'dipanggil_at' => null,
-                    ]);
+                    $lastAntrian = Pendaftaran::whereDate('tanggal_daftar', today())
+                        ->lockForUpdate()
+                        ->max('no_antrian') ?? 0;
+                    foreach ($pending as $i => $p) {
+                        $p->update([
+                            'tanggal_daftar' => today(),
+                            'no_antrian' => $lastAntrian + 1 + $i,
+                            'dipanggil_at' => null,
+                        ]);
+                    }
+                    $rolloverCount = $pending->count();
                 }
-                $rolloverCount = $pending->count();
-            }
+            });
         }
 
         $pendaftaran = Pendaftaran::with(['pasien', 'petugas.pegawai', 'dokter.pegawai'])
@@ -106,37 +111,46 @@ class PendaftaranController extends Controller
             $idPasien = $pasien->id_pasien;
         }
 
-        $existing = Pendaftaran::where('id_pasien', $idPasien)
-            ->whereDate('tanggal_daftar', today())
-            ->doesntHave('pemeriksaan')
-            ->first();
+        DB::beginTransaction();
+        try {
+            $existing = Pendaftaran::where('id_pasien', $idPasien)
+                ->whereDate('tanggal_daftar', today())
+                ->doesntHave('pemeriksaan')
+                ->lockForUpdate()
+                ->first();
 
-        if ($existing) {
-            if ($validated['keluhan']) {
-                $existing->update([
-                    'keluhan' => $existing->keluhan
-                        ? $existing->keluhan . "\n- " . $validated['keluhan']
-                        : $validated['keluhan'],
-                ]);
+            if ($existing) {
+                if ($validated['keluhan']) {
+                    $existing->update([
+                        'keluhan' => $existing->keluhan
+                            ? $existing->keluhan . "\n- " . $validated['keluhan']
+                            : $validated['keluhan'],
+                    ]);
+                }
+                DB::commit();
+                return redirect()->route('petugas.pendaftaran.index')
+                    ->with('success', 'Keluhan ditambahkan ke pendaftaran yang sudah ada.');
             }
-            return redirect()->route('petugas.pendaftaran.index')
-                ->with('success', 'Keluhan ditambahkan ke pendaftaran yang sudah ada.');
+
+            $noAntrian = (Pendaftaran::whereDate('tanggal_daftar', today())
+                ->lockForUpdate()
+                ->max('no_antrian') ?? 0) + 1;
+
+            Pendaftaran::create([
+                'id_pasien' => $idPasien,
+                'id_petugas' => $petugas->id_petugas,
+                'no_antrian' => $noAntrian,
+                'tipe_pendaftaran' => 'petugas',
+                'tanggal_daftar' => today(),
+                'keluhan' => $validated['keluhan'],
+            ]);
+
+            DB::commit();
+            return redirect()->route('petugas.pendaftaran.index')->with('success', 'Pendaftaran berhasil.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Gagal mendaftarkan pasien: ' . $e->getMessage()]);
         }
-
-        Pendaftaran::create([
-            'id_pasien' => $idPasien,
-            'id_petugas' => $petugas->id_petugas,
-            'no_antrian' => DB::transaction(function () {
-                return (Pendaftaran::whereDate('tanggal_daftar', today())
-                    ->lockForUpdate()
-                    ->max('no_antrian') ?? 0) + 1;
-            }),
-            'tipe_pendaftaran' => 'petugas',
-            'tanggal_daftar' => today(),
-            'keluhan' => $validated['keluhan'],
-        ]);
-
-        return redirect()->route('petugas.pendaftaran.index')->with('success', 'Pendaftaran berhasil.');
     }
 
     public function show($id)
@@ -164,38 +178,61 @@ class PendaftaranController extends Controller
 
     public function update(Request $request, $id)
     {
-        $pendaftaran = Pendaftaran::findOrFail($id);
+        DB::beginTransaction();
+        try {
+            $pendaftaran = Pendaftaran::where('id_pendaftaran', $id)->lockForUpdate()->firstOrFail();
 
-        if ($pendaftaran->pemeriksaan) {
-            return back()->with('error', 'Tidak bisa mengubah pendaftaran yang sudah diperiksa.');
+            if ($request->input('updated_at') && $pendaftaran->updated_at->toDateTimeString() !== $request->input('updated_at')) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'stale_data' => 'Data pendaftaran telah diubah oleh pengguna lain. Silakan muat ulang halaman dan coba lagi.',
+                ]);
+            }
+
+            if ($pendaftaran->pemeriksaan) {
+                DB::rollBack();
+                return back()->with('error', 'Tidak bisa mengubah pendaftaran yang sudah diperiksa.');
+            }
+
+            $validated = $request->validate([
+                'id_pasien' => 'required|exists:pasien,id_pasien',
+                'keluhan' => 'required|string',
+            ]);
+
+            $pendaftaran->update([
+                'id_pasien' => $validated['id_pasien'],
+                'keluhan' => $validated['keluhan'],
+            ]);
+
+            DB::commit();
+            return redirect()->route('petugas.pendaftaran.index')
+                ->with('success', 'Pendaftaran berhasil diubah.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal mengubah pendaftaran: ' . $e->getMessage());
         }
-
-        $validated = $request->validate([
-            'id_pasien' => 'required|exists:pasien,id_pasien',
-            'keluhan' => 'required|string',
-        ]);
-
-        $pendaftaran->update([
-            'id_pasien' => $validated['id_pasien'],
-            'keluhan' => $validated['keluhan'],
-        ]);
-
-        return redirect()->route('petugas.pendaftaran.index')
-            ->with('success', 'Pendaftaran berhasil diubah.');
     }
 
     public function destroy($id)
     {
-        $pendaftaran = Pendaftaran::findOrFail($id);
+        DB::beginTransaction();
+        try {
+            $pendaftaran = Pendaftaran::where('id_pendaftaran', $id)->lockForUpdate()->firstOrFail();
 
-        if ($pendaftaran->pemeriksaan) {
-            return back()->with('error', 'Tidak bisa menghapus pendaftaran yang sudah diperiksa.');
+            if ($pendaftaran->pemeriksaan) {
+                DB::rollBack();
+                return back()->with('error', 'Tidak bisa menghapus pendaftaran yang sudah diperiksa.');
+            }
+
+            $pendaftaran->delete();
+
+            DB::commit();
+            return redirect()->route('petugas.pendaftaran.index')
+                ->with('success', 'Pendaftaran berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus pendaftaran: ' . $e->getMessage());
         }
-
-        $pendaftaran->delete();
-
-        return redirect()->route('petugas.pendaftaran.index')
-            ->with('success', 'Pendaftaran berhasil dihapus.');
     }
 
     public function panggil(Request $request, $id)
@@ -205,29 +242,38 @@ class PendaftaranController extends Controller
             return back()->with('error', $status['pesan']);
         }
 
-        $pendaftaran = Pendaftaran::findOrFail($id);
-
-        if ($pendaftaran->pemeriksaan) {
-            return back()->with('error', 'Pasien sudah diperiksa.');
-        }
-
         $validated = $request->validate([
             'id_dokter' => 'required|exists:dokter,id_dokter',
         ]);
 
-        $dokter = Dokter::findOrFail($validated['id_dokter']);
+        DB::beginTransaction();
+        try {
+            $pendaftaran = Pendaftaran::where('id_pendaftaran', $id)->lockForUpdate()->firstOrFail();
 
-        if ($dokter->status !== 'tersedia') {
-            return back()->with('error', 'Dokter sedang sibuk.');
+            if ($pendaftaran->pemeriksaan) {
+                DB::rollBack();
+                return back()->with('error', 'Pasien sudah diperiksa.');
+            }
+
+            $dokter = Dokter::where('id_dokter', $validated['id_dokter'])->lockForUpdate()->firstOrFail();
+
+            if ($dokter->status !== 'tersedia') {
+                DB::rollBack();
+                return back()->with('error', 'Dokter sedang sibuk.');
+            }
+
+            $dokter->update(['status' => 'sibuk']);
+
+            $pendaftaran->update([
+                'id_dokter' => $dokter->id_dokter,
+                'dipanggil_at' => now(),
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Pasien "' . ($pendaftaran->pasien->nama_pasien ?? '') . '" dipanggil untuk dr. ' . ($dokter->pegawai->nama_pegawai ?? '') . '.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memanggil pasien: ' . $e->getMessage());
         }
-
-        $dokter->update(['status' => 'sibuk']);
-
-        $pendaftaran->update([
-            'id_dokter' => $dokter->id_dokter,
-            'dipanggil_at' => now(),
-        ]);
-
-        return back()->with('success', 'Pasien "' . ($pendaftaran->pasien->nama_pasien ?? '') . '" dipanggil untuk dr. ' . ($dokter->pegawai->nama_pegawai ?? '') . '.');
     }
 }
