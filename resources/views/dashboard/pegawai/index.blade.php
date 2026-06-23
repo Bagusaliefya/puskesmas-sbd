@@ -36,8 +36,8 @@
                         <td>{{ $p->loket ?? '-' }}</td>
                         <td>{{ $p->pegawai->no_hp ?? '-' }}</td>
                         <td class="text-right">
-                            <a href="{{ route('pegawai.show', $p->pegawai) }}" class="btn-ghost-action btn-xs" title="Detail">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
+                            <a href="{{ route('pegawai.show', $p->pegawai) }}" class="btn-ghost-action" title="Detail">
+                                <span class="material-symbols-outlined">visibility</span>
                             </a>
                         </td>
                     </tr>
@@ -71,8 +71,8 @@
                         <td>{{ $d->spesialisasi ?? '-' }}</td>
                         <td>{{ $d->pegawai->no_hp ?? '-' }}</td>
                         <td class="text-right">
-                            <a href="{{ route('pegawai.show', $d->pegawai) }}" class="btn-ghost-action btn-xs" title="Detail">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
+                            <a href="{{ route('pegawai.show', $d->pegawai) }}" class="btn-ghost-action" title="Detail">
+                                <span class="material-symbols-outlined">visibility</span>
                             </a>
                         </td>
                     </tr>

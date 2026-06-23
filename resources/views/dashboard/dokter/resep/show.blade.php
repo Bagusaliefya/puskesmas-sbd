@@ -55,23 +55,15 @@
             </h2>
             <div class="overflow-x-auto">
                 <table class="table w-full">
-                    <thead><tr><th>Obat</th><th>Jumlah</th><th>Dosis</th><th>Harga</th><th>Subtotal</th></tr></thead>
+                    <thead><tr><th>Obat</th><th>Jumlah</th><th>Dosis</th></tr></thead>
                     <tbody>
-                        @php $total = 0; @endphp
                         @foreach($resep->detailResep as $dr)
-                        @php $subtotal = $dr->jumlah * $dr->obat->harga; $total += $subtotal; @endphp
                         <tr>
                             <td>{{ $dr->obat->nama_obat ?? '-' }}</td>
                             <td>{{ $dr->jumlah }}</td>
                             <td>{{ $dr->dosis ?? '-' }}</td>
-                            <td>Rp {{ number_format($dr->obat->harga, 0, ',', '.') }}</td>
-                            <td>Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
                         </tr>
                         @endforeach
-                        <tr class="font-bold">
-                            <td colspan="4" class="text-right">Total</td>
-                            <td>Rp {{ number_format($total, 0, ',', '.') }}</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>

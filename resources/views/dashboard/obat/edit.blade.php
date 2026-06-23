@@ -41,13 +41,6 @@
                         <input type="number" name="stok_minimum" class="input input-bordered w-full @error('stok_minimum') input-error @enderror" value="{{ old('stok_minimum', $obat->stok_minimum ?? 10) }}" min="0" required>
                         @error('stok_minimum') <span class="text-error text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text font-medium">Harga (Rp) <span class="text-error">*</span></span>
-                        </label>
-                        <input type="number" name="harga" class="input input-bordered w-full @error('harga') input-error @enderror" value="{{ old('harga', $obat->harga) }}" min="0" required>
-                        @error('harga') <span class="text-error text-xs mt-1">{{ $message }}</span> @enderror
-                    </div>
                 </div>
 
                 <div class="btn-group mt-8 pt-6 border-t" style="border-color:oklch(93% 0.006 268 / .5)">

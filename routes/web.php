@@ -25,8 +25,9 @@ Route::get('/daftar/sukses/{id}', [DaftarController::class, 'sukses'])->name('da
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/login', [AuthController::class, 'authenticate']);
 });
+
+Route::post('/login', [AuthController::class, 'authenticate']);
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 

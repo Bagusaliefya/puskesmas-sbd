@@ -81,7 +81,7 @@
                 @endforeach
             </p>
         </div>
-        <a href="{{ route('obat.index') }}" class="btn-primary-action text-sm">
+        <a href="{{ route('obat.index') }}" class="btn-primary-action">
             <span class="material-symbols-outlined">visibility</span> Lihat
         </a>
     </div>

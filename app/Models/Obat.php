@@ -14,7 +14,6 @@ class Obat extends Model
         'nama_obat',
         'stok',
         'stok_minimum',
-        'harga',
     ];
 
     public function stokMenipis(): bool

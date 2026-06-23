@@ -57,7 +57,7 @@
         <div class="p-4 flex items-center gap-3 text-sm font-semibold" style="color:{{ $status['warna'] }}">
             <span class="material-symbols-outlined">{{ $status['icon'] }}</span>
             {{ $status['pesan'] }}
-            <a href="{{ route('petugas.pendaftaran.index') }}" class="btn-ghost-action btn-xs ml-auto">Kembali</a>
+            <a href="{{ route('petugas.pendaftaran.index') }}" class="btn-ghost-action ml-auto">Kembali</a>
         </div>
     </div>
     @endif

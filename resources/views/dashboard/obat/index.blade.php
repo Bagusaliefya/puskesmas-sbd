@@ -48,7 +48,7 @@
 <dialog id="modal-import-obat" class="modal">
     <div class="modal-box">
         <h3 class="text-lg font-bold mb-1">Import Data Obat</h3>
-        <p class="text-sm mb-4" style="color:oklch(20% 0.024 262 / .6)">Upload file CSV dengan format: Nama Obat, Stok, Stok Minimum, Harga</p>
+        <p class="text-sm mb-4" style="color:oklch(20% 0.024 262 / .6)">Upload file CSV dengan format: Nama Obat, Stok, Stok Minimum</p>
         <form method="POST" action="{{ route('obat.import') }}" enctype="multipart/form-data">
             @csrf
             <input type="file" name="file" accept=".csv,.txt" class="file-input file-input-bordered w-full mb-4" required>
@@ -71,7 +71,6 @@
                     <th>Stok</th>
                     <th>Stok Minimum</th>
                     <th>Status</th>
-                    <th>Harga</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -88,7 +87,6 @@
                             <span class="badge badge-sm badge-success">Aman</span>
                         @endif
                     </td>
-                    <td>Rp {{ number_format($o->harga, 0, ',', '.') }}</td>
                     <td>
                         <a href="{{ route('obat.show', $o) }}" class="btn-ghost-action">
                             <span class="material-symbols-outlined text-base">visibility</span> Detail
@@ -96,7 +94,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center py-8" style="color:oklch(20% 0.024 262 / .5)">Belum ada data obat</td></tr>
+                <tr><td colspan="5" class="text-center py-8" style="color:oklch(20% 0.024 262 / .5)">Belum ada data obat</td></tr>
                 @endforelse
             </tbody>
         </table>

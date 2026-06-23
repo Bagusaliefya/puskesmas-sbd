@@ -14,7 +14,6 @@ class ObatResource extends JsonResource
             'nama_obat' => $this->nama_obat,
             'stok' => $this->stok,
             'stok_minimum' => $this->stok_minimum,
-            'harga' => $this->harga,
             'stok_menipis' => $this->stokMenipis(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

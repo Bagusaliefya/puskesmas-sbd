@@ -33,7 +33,6 @@
                 @endif
             </td>
         </tr>
-        <tr><td class="font-semibold py-4">Harga</td><td class="py-4">Rp {{ number_format($obat->harga, 0, ',', '.') }}</td></tr>
     </table>
     <div class="btn-group mt-6 pt-6" style="border-top:1px solid oklch(93% 0.006 268 / .5)">
         <a href="{{ route('obat.edit', $obat) }}" class="btn-secondary-action">

@@ -43,7 +43,7 @@
                     <td>
                         @if($u->id !== auth()->id())
                         <div class="flex gap-1 items-center" style="flex-wrap:wrap">
-                            <button class="btn-secondary-action text-sm" onclick="document.getElementById('reset-{{ $u->id }}').showModal()">
+                            <button class="btn-secondary-action" onclick="document.getElementById('reset-{{ $u->id }}').showModal()">
                                 <span class="material-symbols-outlined" style="font-size:16px">key</span> Reset
                             </button>
                             <button class="btn-{{ $u->is_active ? 'danger' : 'success' }}-action text-sm" onclick="document.getElementById('toggle-{{ $u->id }}').showModal()">

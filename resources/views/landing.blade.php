@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Selamat Datang - {{ config('app.name') }}</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    {{-- <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}"> --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -90,7 +90,7 @@
                 <div class="relative">
                     <div class="bg-gradient-to-br from-[#00685f]/10 to-[#00685f]/5 rounded-[40px] p-2">
                         <div class="bg-white/40 rounded-[36px] overflow-hidden shadow-soft-lg">
-                            <img src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=600&q=80" alt="Dokter dan pasien" class="w-full h-auto object-cover rounded-[36px]">
+                            <img src="https://cdn.undraw.co/illustrations/doctor_aum1.svg" alt="Dokter dan pasien" class="w-full h-auto rounded-[36px]">
                         </div>
                     </div>
 

@@ -57,7 +57,7 @@
                     <span class="material-symbols-outlined">prescriptions</span>
                     Resep Obat
                 </h2>
-                <button class="btn-danger-action text-sm no-print" onclick="document.getElementById('hapus-resep').showModal()">
+                <button class="btn-danger-action no-print" onclick="document.getElementById('hapus-resep').showModal()">
                     <span class="material-symbols-outlined">delete</span>
                     Hapus Resep
                 </button>

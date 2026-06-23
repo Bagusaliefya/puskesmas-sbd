@@ -108,7 +108,7 @@
                             <span class="material-symbols-outlined" style="font-size:16px">visibility</span>
                         </a>
                         @if(!$d->pemeriksaan && !$d->dipanggil_at)
-                        <button class="btn-primary-action text-sm py-1 px-3" onclick="document.getElementById('panggil-{{ $d->id_pendaftaran }}').showModal()">
+                        <button class="btn-primary-action" onclick="document.getElementById('panggil-{{ $d->id_pendaftaran }}').showModal()">
                             <span class="material-symbols-outlined" style="font-size:16px">campaign</span> Panggil
                         </button>
                         <dialog id="panggil-{{ $d->id_pendaftaran }}" class="modal">

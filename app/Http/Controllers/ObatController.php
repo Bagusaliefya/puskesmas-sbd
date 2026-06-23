@@ -32,7 +32,6 @@ class ObatController extends Controller
             'nama_obat' => 'required|string|max:255',
             'stok' => 'required|integer|min:0',
             'stok_minimum' => 'required|integer|min:0',
-            'harga' => 'required|numeric|min:0',
         ]);
 
         if ((int) $validated['stok'] < (int) $validated['stok_minimum']) {
@@ -58,7 +57,6 @@ class ObatController extends Controller
             'nama_obat' => 'required|string|max:255',
             'stok' => 'required|integer|min:0',
             'stok_minimum' => 'required|integer|min:0',
-            'harga' => 'required|numeric|min:0',
         ]);
 
         if ((int) $validated['stok'] < (int) $validated['stok_minimum']) {
@@ -92,14 +90,13 @@ class ObatController extends Controller
         $callback = function () use ($obat) {
             $file = fopen('php://output', 'w');
             fputs($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['Nama Obat', 'Stok', 'Stok Minimum', 'Harga']);
+            fputcsv($file, ['Nama Obat', 'Stok', 'Stok Minimum']);
 
             foreach ($obat as $o) {
                 fputcsv($file, [
                     $o->nama_obat,
                     $o->stok,
                     $o->stok_minimum,
-                    $o->harga,
                 ]);
             }
 
@@ -128,7 +125,6 @@ class ObatController extends Controller
                     'nama_obat' => trim($row[0]),
                     'stok' => (int) ($row[1] ?? 0),
                     'stok_minimum' => (int) ($row[2] ?? 0),
-                    'harga' => (float) ($row[3] ?? 0),
                 ]);
                 $imported++;
             }
