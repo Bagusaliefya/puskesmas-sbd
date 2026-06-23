@@ -72,6 +72,13 @@
                     </div>
                     <div class="form-control">
                         <label class="label">
+                            <span class="label-text font-medium">Email Akun <span class="text-error">*</span></span>
+                        </label>
+                        <input type="email" name="email" class="input input-bordered w-full @error('email') input-error @enderror" value="{{ old('email', $pegawai->user->email ?? '') }}" placeholder="contoh@puskesmas.test" required>
+                        @error('email') <span class="text-error text-xs mt-1">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
                             <span class="label-text font-medium">Password Akun</span>
                         </label>
                         <input type="password" name="password" class="input input-bordered w-full @error('password') input-error @enderror" placeholder="Kosongkan jika tidak diubah">

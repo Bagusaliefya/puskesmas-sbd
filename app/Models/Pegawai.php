@@ -18,6 +18,11 @@ class Pegawai extends Model
         'alamat',
     ];
 
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id_pegawai', 'id_pegawai');
+    }
+
     public function petugas()
     {
         return $this->hasOne(Petugas::class, 'id_pegawai', 'id_pegawai');

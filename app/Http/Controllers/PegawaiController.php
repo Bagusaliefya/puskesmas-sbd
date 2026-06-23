@@ -7,7 +7,6 @@ use App\Models\Pegawai;
 use App\Models\Petugas;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class PegawaiController extends Controller
 {
@@ -33,6 +32,7 @@ class PegawaiController extends Controller
             'tanggal_masuk' => 'nullable|date',
             'alamat' => 'nullable|string',
             'tipe' => 'required|in:petugas,dokter',
+            'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:3',
             'loket' => 'nullable|string|max:255',
             'spesialisasi' => 'nullable|string|max:255',
@@ -58,17 +58,9 @@ class PegawaiController extends Controller
             ]);
         }
 
-        $baseEmail = Str::of($validated['nama_pegawai'])->lower()->replace(' ', '.')->append('@puskesmas.test')->toString();
-        $email = $baseEmail;
-        $suffix = 1;
-        while (User::where('email', $email)->exists()) {
-            $email = Str::of($baseEmail)->replace('@puskesmas.test', "{$suffix}@puskesmas.test")->toString();
-            $suffix++;
-        }
-
         $user = new User([
             'name' => $validated['nama_pegawai'],
-            'email' => $email,
+            'email' => $validated['email'],
             'password' => $validated['password'],
             'id_pegawai' => $pegawai->id_pegawai,
         ]);
@@ -76,7 +68,7 @@ class PegawaiController extends Controller
         $user->save();
         $user->assignRole($validated['tipe']);
 
-        return redirect()->route('pegawai.index')->with('success', "Data pegawai berhasil ditambahkan. Akun login: {$email}");
+        return redirect()->route('pegawai.index')->with('success', "Data pegawai berhasil ditambahkan. Akun login: {$validated['email']}");
     }
 
     public function show(Pegawai $pegawai)
@@ -88,13 +80,15 @@ class PegawaiController extends Controller
 
     public function edit(Pegawai $pegawai)
     {
-        $pegawai->load(['petugas', 'dokter']);
+        $pegawai->load(['petugas', 'dokter', 'user']);
 
         return view('dashboard.pegawai.edit', compact('pegawai'));
     }
 
     public function update(Request $request, Pegawai $pegawai)
     {
+        $user = User::where('id_pegawai', $pegawai->id_pegawai)->first();
+
         $validated = $request->validate([
             'nama_pegawai' => 'required|string|max:255',
             'jabatan' => 'required|string|max:255',
@@ -102,6 +96,7 @@ class PegawaiController extends Controller
             'tanggal_masuk' => 'nullable|date',
             'alamat' => 'nullable|string',
             'tipe' => 'required|in:petugas,dokter',
+            'email' => 'required|email|max:255|unique:users,email,' . optional($user)->id,
             'password' => 'nullable|string|min:3',
             'loket' => 'nullable|string|max:255',
             'spesialisasi' => 'nullable|string|max:255',
@@ -129,9 +124,9 @@ class PegawaiController extends Controller
             $pegawai->petugas()->delete();
         }
 
-        $user = User::where('id_pegawai', $pegawai->id_pegawai)->first();
         if ($user) {
             $user->name = $validated['nama_pegawai'];
+            $user->email = $validated['email'];
             $user->role = $validated['tipe'];
             if ($request->filled('password')) {
                 $user->password = $validated['password'];
